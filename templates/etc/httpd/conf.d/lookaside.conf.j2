@@ -1,0 +1,31 @@
+<VirtualHost *:443>
+    LogLevel warn
+    SSLEngine on
+    SSLProtocol all -SSLv2 -SSLv3
+    SSLHonorCipherOrder on
+    SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW:!aNULL:!eNULL:!DES:!MD5:!PSK:!RC4
+    SSLCertificateFile /etc/pki/tls/certs/{{ inventory_hostname }}.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/{{ inventory_hostname }}.key
+    SSLCertificateChainFile /etc/pki/tls/certs/{{ inventory_hostname }}-CAChain.crt
+
+    ScriptAlias /lookaside/upload.cgi /var/www/cgi-bin/upload.cgi
+
+    Alias /repo {{ lookaside_dir }}
+    Alias /lookaside {{ lookaside_dir }}
+    Alias /sources {{ lookaside_dir }}
+
+    CustomLog "logs/pkgs-access.log" combined
+    ErrorLog "logs/pkgs-error.log"
+
+    <Directory {{ lookaside_dir }}>
+	Options FollowSymLinks
+	AllowOverride None
+	Require all granted
+    </Directory>
+
+    <Location /lookaside/upload.cgi>
+        SetHandler cgi-script
+        Options +ExecCGI
+    </Location>
+
+</VirtualHost>

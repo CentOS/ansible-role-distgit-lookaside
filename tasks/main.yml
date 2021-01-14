@@ -1,0 +1,57 @@
+---
+- name: install lookaside prereqs
+  package:
+    name: 
+      - httpd
+      - mod_ssl
+      - python3
+    state: installed
+
+- name: copy tls key
+  copy:
+    src: "{{ pkistore }}/{{ inventory_hostname }}.key"
+    dest: /etc/pki/tls/private/
+
+- name: copy tls certificate
+  copy:
+    src: "{{ pkistore }}/{{ inventory_hostname }}.crt"
+    dest: /etc/pki/tls/certs/
+
+- name: copy CA certificate
+  copy:
+    src: "{{ pkistore }}/{{ inventory_hostname }}-CAChain.crt"
+    dest: /etc/pki/tls/certs/
+
+- name: make the lookaside cache directory
+  file:
+    path: "{{ lookaside_rootpath }}/lookaside"
+    state: directory
+    owner: apache
+    group: apache
+    mode: 0775
+    setype: httpd_sys_rw_content_t
+
+- name: Ensuring apache group can push to lookaside
+  acl:
+    entity: apache
+    etype: group
+    default: yes
+    path: "{{ lookaside_rootpath }}/lookaside"
+    permissions: rwx
+    recursive: yes
+    state: present
+
+- name: install the upload.cgi script
+  copy:
+    src: "upload.cgi"
+    dest: "/var/www/cgi-bin/upload.cgi"
+    mode: 0755
+    setype: "httpd_sys_script_exec_t"
+
+
+- name: install the httpd config
+  template:
+    src: "etc/httpd/conf.d/lookaside.conf.j2"
+    dest: "/etc/httpd/conf.d/lookaside.conf"
+  notify:
+    - reload httpd
