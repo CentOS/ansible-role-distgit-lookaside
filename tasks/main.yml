@@ -2,25 +2,26 @@
 - name: install lookaside prereqs
   package:
     name: 
-      - httpd
-      - mod_ssl
       - python3
     state: installed
 
-- name: copy tls key
-  copy:
-    src: "{{ pkistore }}/{{ inventory_hostname }}.key"
-    dest: /etc/pki/tls/private/
+- name: Configuring httpd
+  import_role:
+    name: httpd
+  vars:
+    httpd_tls: True
+  tags:
+    - tls
 
-- name: copy tls certificate
-  copy:
-    src: "{{ pkistore }}/{{ inventory_hostname }}.crt"
-    dest: /etc/pki/tls/certs/
-
-- name: copy CA certificate
-  copy:
-    src: "{{ pkistore }}/{{ inventory_hostname }}-CAChain.crt"
-    dest: /etc/pki/tls/certs/
+- import_role:
+    name: httpd
+    tasks_from: pki-tls
+  vars:
+    pki_hostname: "{{ distgit_lookaside_httpd_hostname }}"
+  notify:
+    - restart_httpd
+  tags:
+    - tls
 
 - name: make the lookaside cache directory
   file:

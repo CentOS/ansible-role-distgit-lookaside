@@ -1,1 +1,10 @@
+# Default variables for the distgit-lookaside role
+
+# Base directory where we'll create the structure
+lookaside_rootpath: /srv/cache
+
+# Where will the sources be uploaded (lookaside cache) - under lookaside_rootpath
 lookaside_dir: /srv/cache/lookaside
+
+# httpd fqdn/hostname (used for the cert, default to inventory hostname)
+distgit_lookaside_httpd_hostname: "{{ inventory_hostname }}"
