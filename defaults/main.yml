@@ -8,3 +8,7 @@ lookaside_dir: /srv/cache/lookaside
 
 # httpd fqdn/hostname (used for the cert, default to inventory hostname)
 distgit_lookaside_httpd_hostname: "{{ inventory_hostname }}"
+
+# httpd settings
+# max filesize to upload to lookaside (4G)
+httpd_limitrequestbody: '4294967296'

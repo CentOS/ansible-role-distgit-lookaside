@@ -20,11 +20,13 @@
 	Options FollowSymLinks
 	AllowOverride None
 	Require all granted
+        LimitRequestBody {{ httpd_limitrequestbody }}
     </Directory>
 
     <Location /lookaside/upload.cgi>
         SetHandler cgi-script
         Options +ExecCGI
+        LimitRequestBody {{ httpd_limitrequestbody }}
     </Location>
 
 </VirtualHost>
