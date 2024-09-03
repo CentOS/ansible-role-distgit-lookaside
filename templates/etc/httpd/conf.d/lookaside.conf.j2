@@ -6,6 +6,7 @@
     SSLCertificateFile /etc/pki/tls/certs/{{ inventory_hostname }}.crt
     SSLCertificateKeyFile /etc/pki/tls/private/{{ inventory_hostname }}.key
     SSLCertificateChainFile /etc/pki/tls/certs/{{ inventory_hostname }}-CAChain.crt
+    Header always set Strict-Transport-Security "max-age=31536000"
 
     ScriptAlias /lookaside/upload.cgi /var/www/cgi-bin/upload.cgi
 

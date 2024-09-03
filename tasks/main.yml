@@ -56,3 +56,6 @@
     dest: "/etc/httpd/conf.d/lookaside.conf"
   notify:
     - reload httpd
+  tags:
+    - config
+    - tls
