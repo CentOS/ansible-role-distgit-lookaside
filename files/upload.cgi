@@ -8,11 +8,17 @@
 import os
 import sys
 import errno
-import cgi
 import stat
 import hashlib
 import tempfile
 import time
+import warnings
+
+# Suppress Python 3.12 deprecation & runtime warnings so Apache does not log AH01215
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*mktemp.*")
+
+import cgi
 
 # reading buffer size
 BUFFER_SIZE = 4096
@@ -22,8 +28,10 @@ DEFAULT_NAMESPACE = 'rpms'
 # Lookaside cache directory
 CACHE_DIR = '/srv/cache/lookaside'
 
+# Set group-writable umask (002) BEFORE cgi.FieldStorage creates temp spool files
+os.umask(0o002)
+
 form = cgi.FieldStorage()
-os.umask(0o02)
 
 
 def log_msg(*msgs):
@@ -74,6 +82,14 @@ def makedirs(path, mode=0o2775):
         os.makedirs(path, mode=mode)
         log_msg('mkdir -p %s' % path)
     except OSError as exc:
+        # Fall back to 0775 if the filesystem (e.g. NFS) rejects the setgid bit
+        if exc.errno == errno.EPERM and mode != 0o0775:
+            try:
+                os.makedirs(path, mode=0o0775)
+                log_msg('mkdir -p %s (fallback 0775)' % path)
+                return
+            except OSError as fallback_exc:
+                exc = fallback_exc
         if exc.errno != errno.EEXIST:
             send_error('Failed to create directory: %s' % exc)
 
@@ -126,7 +142,7 @@ else:
             send_error("No file given for upload. Aborting")
         try:
             FILENAME = os.path.basename(FILE.filename)
-        except:
+        except Exception:
             send_error("Could not extract the filename for upload. Aborting")
     else:
         send_error("required field '%s' is not present" % ("file", ))
@@ -172,9 +188,9 @@ hash_dir = "%s/%s/%s" % (my_filedir, hash_type, checksum)
 # first test if the module really exists
 # TODO: this needs to be a request against if the component exists in gitlab
 # if not check_dir("%s/%s.git" % (GITREPO, NAME), 0):
-#     log_msg("Unknown module", NAME)
-#     send_ok("Module '%s' does not exist!" % (NAME,))
-#     sys.exit(-9)
+#      log_msg("Unknown module", NAME)
+#      send_ok("Module '%s' does not exist!" % (NAME,))
+#      sys.exit(-9)
 
 makedirs(my_moddir)
 

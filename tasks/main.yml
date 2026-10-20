@@ -48,7 +48,8 @@
     dest: "/var/www/cgi-bin/upload.cgi"
     mode: 0755
     setype: "httpd_sys_script_exec_t"
-
+  tags:
+    - script
 
 - name: install the httpd config
   template:
